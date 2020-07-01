@@ -1,0 +1,25 @@
+{
+  "selectors": {
+    "menuButton": "//div[@id='pkg-examples']//div",
+    "output": "//div[@id='example_After']//textarea"
+  },
+  "steps": [
+    {
+      "action": "navigate",
+      "link": "https://golang.org/pkg/time"
+    },
+    {
+      "_comment": "wayang will wait till the page completes loading",
+      "action": "waitLoad"
+    },
+    {
+      "_comment": "click the menu button selector. this will show all examples",
+      "action": "click",
+      "element": "$menuButton"
+    },
+    {
+      "action": "text",
+      "element": "$output"
+    }
+  ]
+}
