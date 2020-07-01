@@ -1,0 +1,13 @@
+Usage of ./wayang:
+  -file string
+        *the location of the file which will be executed
+  -headless
+        decide between whether to run chrome in windowed mode or not (default true)
+  -output
+        print JSON output to stdout
+  -outputFile string
+        the file location of the output json
+  -timeout int
+        timeout for program (default 30)
+  -verbose
+        verbose logging information
