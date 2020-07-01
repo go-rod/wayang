@@ -2,6 +2,22 @@
 
 ![](https://img.shields.io/github/v/tag/go-rod/wayang?sort=semver)
 
+Table of Contents
+=================
+
+* [Overview](#overview)
+* [Table of Contents](#table-of-contents)
+* [Running a program](#running-a-program)
+* [The Action JSON Object](#the-action-json-object)
+* [Program Structure](#program-structure)
+    * [Selectors](#selectors)
+    * [Actions](#actions)
+    * [Steps](#steps)
+* [Examples](#examples)
+    * [Navigate to a website](#navigate-to-a-website)
+
+
+
 Rod is a High-level Devtools driver directly based on [DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/).
 It's designed for web automation and scraping. Rod also tries to expose low-level interfaces to users, 
 so that whenever a function is missing users can easily send control requests to the browser directly.
@@ -9,7 +25,7 @@ so that whenever a function is missing users can easily send control requests to
 Wayang is a controller of Rod, making it possible to write programs with Rod in a more language neutral way.
 While it does not cover all of Rod's API at the moment, we plan to make it feature complete.
 
-### Running a program  
+# Running a program  
 
 1. Build the CLI version for wayang. You scan use the make file provided in the [CLI](./cli) folder. 
  
@@ -24,7 +40,7 @@ With headless mode enabled, Chrome runs in the background and is not rendered.
 4. Read the documentation. The current JSON project is in alpha and not fully tested. 
 You can still see examples in our [parser test file](./impl_test.go)
 
-### The Action Object
+# The Action JSON Object
 
 Actions are the bread and butter of wayang. 
 They are what allow you to use wayang for web scraping, testing, and automation.
@@ -93,7 +109,7 @@ If such a variable exists, we want to dismiss the error by clicking the element 
 element. We can also couple this with a `do` action (which allows you to run multiple actions in place of one), to perhaps
 try our action again. The sky is the limit with what you can achieve. 
 
-### Program Structure
+# Program Structure
 
 The basic structure of a basic program is as follows:
 ```json
@@ -126,7 +142,7 @@ The basic structure of a basic program is as follows:
 
 There's a lot going on here, so let's go through it step by step.
 
-#### Selectors
+### Selectors
 
 Firstly, we define our custom selectors. 
 This can be really handy when you want to refactor selectors in future code without going through your entire script.
@@ -136,7 +152,7 @@ Selectors is a map of key-pair values which are queried through the use of the d
 In the example above, we define a selector with the name `selector_name`. 
 When executing an action, you can refer to the selector by that name by using the the string `$selector_name`.
 
-#### Actions
+### Actions
 
 Sometimes, you may have repeatable actions that you want to use multiple times throughout your code. 
 Alongside the `do` action, you can have your own simple "macro actions" you u can use around your code to do repeatable actions. 
@@ -149,16 +165,16 @@ Currently, there is no feature to provide parameters/arguments to actions.
 If you have a suggestion on how we can implement this while maintaining the simplicity of this language, 
 feel free to create a new issue with your proposed solution. We are always looking on ways to improve wayang.  
 
-#### Steps
+### Steps
 
 Coming to the final part of the program structure, we have the steps. 
 The steps are an **array** of actions, that are ran in order of declaration in the program.
 In the example above, the action with the name `action type` (which doesn't exist, and is only being used as an example)
 is first executed. The other key value pairs in the body will be used as arguments when that action is executed.
 
-### Examples
+# Examples
 
-##### Navigate to a website
+### Navigate to a website
 
 ```json
 {
