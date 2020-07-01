@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/input"
 )
 
 func (parent *Runner) runAction(act Action, source string) interface{} {
@@ -31,12 +32,12 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 			return err("a 'action' key (type string) is required to be present")
 		}
 		if !strings.HasPrefix(actAttr, "$") {
-			return err("could not find a defined action with the requested name")
+			return err("could not find a defined action with the requested name (" + source + ")")
 		}
 		value := strings.TrimPrefix(actAttr, "$")
 		action, ok := parent.program.Actions[value]
 		if !ok {
-			return err("could not find a custom action with the requested name")
+			return err("could not find a custom action with the requested name (" + source + ")")
 		}
 		return parent.runAction(action, source)
 
@@ -290,7 +291,8 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 
 		element, e := parent.createElem(act, err)
 		if e != nil {
-			return *e
+			parent.P.Keyboard.InsertText(text)
+			return nil
 		}
 		element.Input(text)
 		return nil
@@ -328,7 +330,30 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		return nil
 
 	case "press":
-		//TODO implement keyboard input stuff
+		keyAttr, ok := act["key"].(string)
+		var press rune
+		if !ok {
+			return err("a 'key' key (type string) is required to be present")
+		}
+
+		if len(keyAttr) == 1 {
+			press = []rune(keyAttr)[0]
+		} else {
+			for rne, key := range input.Keys {
+				if strings.ToLower(key.Code) == strings.ToLower(keyAttr) {
+					press = rne
+					break
+				}
+			}
+		}
+
+		element, e := parent.createElem(act, err)
+		if e != nil {
+			parent.P.Keyboard.Press(press)
+			return nil
+		}
+		element.Press(press)
+		return nil
 
 	case "scrollIntoView":
 		element, e := parent.createElem(act, err)

@@ -1,0 +1,21 @@
+{
+  "steps": [
+    {
+      "action": "navigate",
+      "link": "https://github.com/search"
+    },
+    {
+      "action": "input",
+      "element": "//input[@name='q']",
+      "text": "git"
+    },
+    {
+      "action": "press",
+      "key": "Enter"
+    },
+    {
+      "action": "text",
+      "element": "//div[contains(@class, 'codesearch-results')]//p"
+    }
+  ]
+}

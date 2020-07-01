@@ -2,7 +2,6 @@ package wayang_test
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/ysmood/kit"
 
@@ -16,13 +15,13 @@ func Example_RunProgram() {
 	// Reading the json to program struct
 	err := kit.ReadJSON("examples_test.json", &program)
 	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
 	}
 
 	// last item executed is returned
 	res, err := wayang.RunProgram(program)
 	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
 	}
 
 	fmt.Println(res)

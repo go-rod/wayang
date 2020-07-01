@@ -27,7 +27,7 @@ func (parent *Runner) RunProgram(program Program) (interface{}, *RuntimeError) {
 func RunProgram(program Program) (interface{}, *RuntimeError) {
 	browser := rod.New().Connect()
 	page := browser.Page("")
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := log.New(os.Stdout, "", log.LstdFlags)
 
 	parent := &Runner{
 		B:      browser,
