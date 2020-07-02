@@ -280,6 +280,10 @@ func notAction(ra runtimeAction, act Action) interface{} {
 
 	stmtAttr := run.makeAction(act["statement"])
 	if stmtAttr == nil {
+		if asBool, ok := act["statement"].(bool); ok {
+			return !asBool
+		}
+
 		return ra.err("a statement is required to be present")
 	}
 
@@ -308,27 +312,27 @@ func textContainsAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("a statement key (type action) is required to be present")
 	}
 
-	substrRes := run.runAction(*stmt, ra.source)
-	switch substrRes.(type) {
+	stmtRes := run.runAction(*stmt, ra.source)
+	switch stmtRes.(type) {
 	case RuntimeError:
-		return substrRes
+		return stmtRes
 	case string:
 		break
 	default:
-		return ra.err("unexpected result from action: ", substrRes)
+		return ra.err("unexpected result from action: ", stmtRes)
 	}
-	substr := substrRes.(string)
+	stmtStr := stmtRes.(string)
 
 	ignoreCase, ok := act["ignoreCase"].(bool)
 	if !ok {
 		ignoreCase = false
 	}
 	if ignoreCase {
-		substr = strings.ToLower(substr)
+		stmtStr = strings.ToLower(stmtStr)
 		text = strings.ToLower(text)
 	}
 
-	return strings.Contains(text, substr)
+	return strings.Contains(stmtStr, text)
 }
 
 func textEqualAction(ra runtimeAction, act Action) interface{} {

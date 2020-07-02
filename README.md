@@ -313,7 +313,8 @@ When executing an action, you can refer to the selector by that name by using th
 ### Actions
 
 Sometimes, you may have repeatable actions that you want to use multiple times throughout your code. 
-Alongside the `do` action, you can have your own simple "macro actions" you u can use around your code to do repeatable actions. 
+Alongside the `do` action, you can have your own simple "macro actions" 
+you can use around your code to do repeatable actions. 
 Similarly to selectors, you define your custom actions in the root `actions` body.
 Custom actions by themselves do not run, and the order in which they are defined do not matter. 
 They are only run when they are called on in the steps tag, or when another action calls it which is running. 
@@ -342,7 +343,7 @@ This can be useful when used in custom actions to execute multiple statements, a
 **Parameters**:
 - `statements` The list of actions that will be executed in order of declaration.
     - Required: Yes
-    - Type: Array(Action)
+    - Type: array(Action)
 
 **Returns**: The result of the last statement. 
 
@@ -375,7 +376,7 @@ This can be useful when writing tests to check for the presence of elements, or 
 **Parameters**:
 - `condition`: An action, whose result will determine whether `statement` or `otherwise` is ran.
     - Required: Yes
-    - Type: Action &rarr; Boolean
+    - Type: Action &rarr; bool
 - `statement`: The action ran when `condition` is true.
     - Required: Yes
     - Type: Action
@@ -410,6 +411,8 @@ Otherwise it will log `program successfully completed`, and continue/exit.
 
 ### store
 
+Store information into the program environment.
+
 **Parameters**:
 - `items`: A map of key-value pairs where the values will be added to the store. 
 The values in the map do not have to be actions, and can also link to custom actions or statements.
@@ -417,8 +420,6 @@ The values in the map do not have to be actions, and can also link to custom act
     - Required: No. (Why are you executing this action then?)
     
 **Returns**: `nil`
-
-Store information into the program environment.
 
 *NOTE*: This is not used as a place to retrieve and query information later yet. 
 At the moment, this is only used as a way to get output information after running a program.
@@ -445,17 +446,225 @@ and `true` for the `success` key.
 ## Text Result Actions
 
 ### attribute
+
+The attribute action allows you to query the value of an attribute of an element. 
+It will always be as the string representation.
+
+```html
+<p class="paragraph">...</p>
+```
+
+In the `p` tag above, the `class` attribute will return `paragraph`.
+
+**Parameters**:
+- `element`: The element that the attribute is queried from.
+    - Type: selector
+    - Required: Yes
+- `name`: The name of the attribute to query.
+    - Type: string
+    - Required: Yes
+
+**Returns**: The value of the queried attribute as a string.
+
+```json
+{
+  "action": "attribute",
+  "element": "//p",
+  "name": "class"
+}
+``` 
+
 ### html
+
+The html action returns the raw outer HTML representation of the element. 
+It will also include all child elements present within the element.
+
+**Parameters**:
+- `element`: The specified element whose html is returned.
+    - Type: selector
+    - Required: Yes
+    
+**Returns**: The value of the outer HTML of the element as a string.
+
+```json
+{
+  "action": "html",
+  "element": "/html"
+}
+```
+
+The above action will return the html of the entire document as a string (assuming it is a proper formatted website).
+
 ### text
+
+This action will return the value for `input` and `textarea` elements, join the selected options for a `select` element,
+and return the inner text for all other elements.
+
+**Parameters**:
+- `element`: The specified element the text is queried from.
+    - Type: selector
+    - Required: Yes
+    
+**Returns**: The text value of the element.
+
+```json
+{
+  "action": "text",
+  "element": "//input[@type='submit']"
+}
+```
 
 ## Boolean Result Actions
 
 ### has
+
+The `has` action returns if the specified element exists or not on the page. 
+This also returns true if the element is not visible. To check if an element is visible, use the `visible` action.
+
+**Parameters**:
+- `element`: The element that is queried. 
+    - Type: selector
+    - Required: Yes
+    
+**Returns**: A boolean value depending on if the element is found on the page.
+
+```json
+{
+  "action": "has",
+  "element": "//div[@id='success-message']"
+}
+```
+
 ### not
+
+The `not` action will result in the inverse of the provided action's result.
+This also returns the inverse of a boolean.
+
+**Parameters**:
+- `statement`: The action whose inverse is returned.
+    - Type: 
+        - Action &rarr; bool
+        - bool
+    - Required: Yes
+
+**Returns**: The inverse of the provided Action/Boolean.
+
+```json
+{
+  "action": "not",
+  "statement": {
+    "action": "has",
+    "element": "//div[contains(@class, 'success')]"
+  }
+}
+```
+
 ### textContains
+
+This action will return whether or not the result of the action contains the specified test.
+
+**Parameters**:
+- `statement`: The action whose result is tested to contain the text.
+    - Type: Action &rarr; string
+    - Required: Yes
+- `text`: The text that is tested to be contained in the statement result.
+    - Type: string
+    - Required: Yes
+- `ignoreCase`: Whether or not to ignore the case of `statement` and `text`.
+    - Type: bool
+    - Required: No
+    - Default: `false`
+
+**Returns**: Whether or not `statement`'s result contains the `text` substring.
+
+```json
+{
+  "action": "textContains",
+  "text": "welcome",
+  "element": "//div[@class='intro-text']", 
+  "ignoreCase": "false"
+}
+```
+
 ### textEqual
+
+The `textEqual` action returns whether or not the result of the `statement` action equals the `text` parameter.
+
+**Parameters**:
+- `statement`: The action whose result is equal to the `text` parameter.
+    - Type: Action &rarr; string
+    - Required: Yes
+- `text`: The text that is tested with the result of `statement`.
+    - Type: string
+    - Required: Yes
+- `ignoreCase`: Whether or not to ignore the case of `statement` and `text`
+    - Type: bool
+    - Required: No
+    - Default: `false`
+
+**Returns**: Whether or not `statement`'s result equals to `text`.
+
+```json
+{
+  "action": "textEqual",
+  "statement": {
+    "action": "attribute",
+    "element": "//*[@id='result']",
+    "name": "score"
+  },
+  "text": "100%"
+}
+```
+
 ### textNotEqual
+
+The inverse result of `textEqual`
+
+See [textEqual](#textequal)
+
+```json
+{
+  "action": "textNotEqual",
+  "statement": {
+    "action": "attribute",
+    "element": "//*[@id='result']",
+    "name": "score"
+  },
+  "text": "100%"
+}
+```
+
 ### visible
+
+The `visible` action returns whether or not the provided parameter `element` is visible on the page or not.
+
+*NOTE*: If the element is not found on the page (visible or not), the program *will* wait indefinitely until it is present.
+Support for a timeout is planned soon. 
+
+Here is how the visibility of an element is determined (JavaScript):
+```js
+function visible() {
+      const box = this.getBoundingClientRect()
+      const style = window.getComputedStyle(this)
+      return style.display !== 'none' &&
+        style.visibility !== 'hidden' &&
+        !!(box.top || box.bottom || box.width || box.height)
+    }
+```
+
+**Parameters**:
+- `element`: The element whose visibility is checked. 
+    - Type: Action &rarr; string
+    - Required: Yes
+
+**Returns**: whether or not the provided element is visible on the page.
+
+```json
+{
+  "action": "visible",
+  "element": "$errorNode"
+}
+```
 
 ## Generic Actions
 
@@ -488,7 +697,7 @@ and `true` for the `success` key.
 - Allow actions to be substituted anywhere for its return value.
 - Support CSS Selectors
 - Support Trimming text for selectors
-- Allow timeout for wait actions
+- Allow timeout for all actions
 - Implement `foreach`
 - Support querying the store
 - Support `trace` mode
