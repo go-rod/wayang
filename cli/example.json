@@ -1,4 +1,10 @@
 {
+  "actions": {
+    "text": {
+      "action": "text",
+      "element": "//div[contains(@class, 'codesearch-results')]//p"
+    }
+  },
   "steps": [
     {
       "action": "navigate",
@@ -14,8 +20,15 @@
       "key": "Enter"
     },
     {
-      "action": "text",
-      "element": "//div[contains(@class, 'codesearch-results')]//p"
+      "action": "store",
+      "items": {
+        "description": {
+          "action": "$text"
+        }
+      }
+    },
+    {
+      "action": "$text"
     }
   ]
 }

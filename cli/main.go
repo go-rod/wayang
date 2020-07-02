@@ -5,10 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
-	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/ysmood/kit"
 
@@ -22,6 +20,7 @@ var (
 	output     = flag.Bool("output", true, "print JSON output to stdout")
 	outputFile = flag.String("outputFile", "", "the file location of the output json")
 	timeout    = flag.Int("timeout", 30, "timeout for program")
+	store      = flag.String("store", "store.json", "the file location to store the program environment after execution")
 )
 
 func main() {
@@ -32,19 +31,8 @@ func main() {
 	}
 
 	url := launcher.New().Headless(*headless).Launch()
-	timeout := time.Duration(*timeout)
-
-	browser := rod.New().ControlURL(url).Timeout(timeout * time.Second).Connect()
-	defer browser.Close()
-
-	page := browser.Page("")
-
-	runner := &wayang.Runner{
-		B:      browser,
-		P:      page,
-		ENV:    map[string]interface{}{},
-		Logger: log.New(os.Stdout, "", log.LstdFlags),
-	}
+	runner := wayang.NewRemoteRunner(url)
+	defer runner.Close()
 
 	var program wayang.Program
 	readRes := kit.ReadJSON(*filePath, &program)
@@ -52,7 +40,17 @@ func main() {
 		log.Fatal("Error while reading to input file:", readRes)
 	}
 
+	timeout := time.Duration(*timeout)
+	runner.P = runner.P.Timeout(timeout * time.Second)
+
 	res, err := runner.RunProgram(program)
+	if *store != "" {
+		writeRes := kit.OutputFile(*store, runner.ENV, nil)
+		if writeRes != nil {
+			log.Fatal("Error while writing the store to a file:", writeRes)
+		}
+	}
+
 	if err != nil {
 		log.Print(err.Error())
 		if *outputFile != "" {
