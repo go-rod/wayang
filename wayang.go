@@ -1,13 +1,37 @@
 package wayang
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/ysmood/kit"
 )
+
+func NewRemoteRunner(url string) *Runner {
+	ctx, cancel := context.WithCancel(context.Background())
+	browser := rod.New().Context(ctx, cancel).ControlURL(url).Connect()
+
+	page := browser.Page("")
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+	return &Runner{
+		B:         browser,
+		P:         page,
+		ENV:       map[string]interface{}{},
+		Context:   ctx,
+		Canceller: cancel,
+		Logger:    logger,
+		program:   Program{},
+	}
+}
+
+func NewRunner() *Runner {
+	url := launcher.New().Launch()
+	return NewRemoteRunner(url)
+}
 
 func (parent *Runner) RunProgram(program Program) (interface{}, *RuntimeError) {
 	parent.program = program
@@ -25,17 +49,7 @@ func (parent *Runner) RunProgram(program Program) (interface{}, *RuntimeError) {
 }
 
 func RunProgram(program Program) (interface{}, *RuntimeError) {
-	browser := rod.New().Connect()
-	page := browser.Page("")
-	logger := log.New(os.Stdout, "", log.LstdFlags)
-
-	parent := &Runner{
-		B:      browser,
-		P:      page,
-		Logger: logger,
-	}
-
-	return parent.RunProgram(program)
+	return NewRunner().RunProgram(program)
 }
 
 func RunActions(actions []Action) (interface{}, *RuntimeError) {
@@ -60,6 +74,11 @@ func (parent *Runner) RunAction(action Action) (interface{}, *RuntimeError) {
 	return parent.RunProgram(Program{
 		Steps: []Action{action},
 	})
+}
+
+func (parent *Runner) Close() {
+	parent.B.Close()
+	parent.Canceller()
 }
 
 func (re *RuntimeError) Action() Action {
