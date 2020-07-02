@@ -8,14 +8,17 @@ Table of Contents
 * [Overview](#overview)
 * [Table of Contents](#table-of-contents)
 * [Running a program](#running-a-program)
+* [Examples](#examples)
+    * [Navigate to a website](#navigate-to-a-website)
+    * [Execute a custom action](#execute-a-custom-action)
+    * [Use a custom selector](#use-a-custom-selector)
+    * [Execute multiple actions in place of one](#execute-multiple-actions-in-place-of-one)
+    * [Using an if action](#using-an-if-action)
 * [The Action JSON Object](#the-action-json-object)
 * [Program Structure](#program-structure)
     * [Selectors](#selectors)
     * [Actions](#actions)
     * [Steps](#steps)
-* [Examples](#examples)
-    * [Navigate to a website](#navigate-to-a-website)
-
 
 
 Rod is a High-level Devtools driver directly based on [DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/).
@@ -39,6 +42,114 @@ With headless mode enabled, Chrome runs in the background and is not rendered.
 
 4. Read the documentation. The current JSON project is in alpha and not fully tested. 
 You can still see examples in our [parser test file](./impl_test.go)
+
+# Examples
+
+### Navigate to a website
+A basic example showing how we can access a different website.
+
+```json
+{
+  "steps": [
+    {
+      "action": "navigate",
+      "link": "https://google.com"
+    }
+  ]
+}
+```
+
+### Execute a custom action
+We define a custom action that navigates to google. 
+We then refer and run that action by prefixing the action name with a `$`.  
+
+```json
+{
+  "actions": {
+    "custom": {
+      "action": "navigate",
+      "link": "https://google.com"
+    }
+  },
+  "steps": [
+    {
+      "action": "$custom"
+    }
+  ]
+}
+```
+
+### Use a custom selector
+This example shows defining a custom selector that can be reused throughout the program.
+This is very useful when a website updates their selectors. You don't need to manually update every action. 
+
+```json
+{
+  "selectors": {
+    "gSearch": "//input[@name='q']"
+  },
+  "steps": [
+    {
+      "action": "input",
+      "element": "$gSearch",
+      "text": "wayang"
+    }
+  ]
+}
+```
+
+### Execute multiple actions in place of one
+In this example, we define a custom action, which normally only allow you to execute a single action. 
+Using the `do` action we are able to chain multiple statements together.
+ 
+```json
+{
+  "actions": {
+    "custom": {
+      "action": "do",
+      "statements": [
+        {
+          "action": "input",
+          "element": "//input[@type'text']",
+          "text": "my text"
+        },
+        {
+          "action": "blur",
+          "element": "//input[@type='text']"
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "action": "$custom"
+    }
+  ]
+}
+```
+
+### Using an `if` action
+Here we test our script completes it's actions by testing for error elements or checking for some text to be equal.
+If you want to do more complex things, you can also use more complex xpath queries to test text, contains, and more.
+
+```json
+{
+  "action": "if",
+  "condition": {
+    "action": "has",
+    "element": "//div[@id='error']"
+  },
+  "execute": {
+    "action": "error",
+    "message": "expected error node to not be present"
+  },
+  "otherwise": {
+    "action": "log",
+    "message": "program successfully completed"
+  }
+}
+```
+
 
 # The Action JSON Object
 
@@ -171,18 +282,3 @@ Coming to the final part of the program structure, we have the steps.
 The steps are an **array** of actions, that are ran in order of declaration in the program.
 In the example above, the action with the name `action type` (which doesn't exist, and is only being used as an example)
 is first executed. The other key value pairs in the body will be used as arguments when that action is executed.
-
-# Examples
-
-### Navigate to a website
-
-```json
-{
-  "steps": [
-    {
-      "action": "navigate",
-      "link": "https://google.com"
-    }
-  ]
-}
-```
