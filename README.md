@@ -27,7 +27,7 @@ While it does not cover all of Rod's API at the moment, we plan to make it featu
 
 # Running a program  
 
-1. Build the CLI version for wayang. You scan use the make file provided in the [CLI](./cli) folder. 
+1. Build the CLI version for wayang. You can use the make file provided in the [CLI](./cli) folder. 
  
 2. There is currently no support for reading programs from STDIN. This is a feature that is planned to be added soon.
 Instead, to link a script to run, you must provide the location of a JSON file. e.g. `--file="example.json"`
