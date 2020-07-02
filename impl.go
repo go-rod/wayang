@@ -183,10 +183,10 @@ func storeAction(ra runtimeAction, act Action) interface{} {
 
 	source := ra.source
 	for s, field := range items {
-		switch field.(type) {
+		switch item := field.(type) {
 		case map[string]interface{}:
 			source = fmt.Sprintf("%s.field[%s]", source, s)
-			res := run.runAction(field.(map[string]interface{}), source)
+			res := run.runAction(item, source)
 			if err, ok := res.(RuntimeError); ok {
 				return err
 			}
@@ -194,19 +194,19 @@ func storeAction(ra runtimeAction, act Action) interface{} {
 
 		case Action:
 			source = fmt.Sprintf("%s.field[%s]", source, s)
-			res := run.runAction(field.(Action), source)
+			res := run.runAction(item, source)
 			if err, ok := res.(RuntimeError); ok {
 				return err
 			}
 			run.ENV[s] = res
 
 		case string:
-			if !strings.HasPrefix(field.(string), "$") {
-				run.ENV[s] = field
+			if !strings.HasPrefix(item, "$") {
+				run.ENV[s] = item
 				break
 			}
 
-			value := strings.TrimPrefix(field.(string), "$")
+			value := strings.TrimPrefix(item, "$")
 			if selector, ok := run.program.Selectors[value]; ok {
 				run.ENV[s] = selector
 				break
@@ -220,10 +220,10 @@ func storeAction(ra runtimeAction, act Action) interface{} {
 				run.ENV[s] = res
 				break
 			}
-			run.ENV[s] = field
+			run.ENV[s] = item
 
 		default:
-			run.ENV[s] = field
+			run.ENV[s] = item
 		}
 	}
 
@@ -231,11 +231,10 @@ func storeAction(ra runtimeAction, act Action) interface{} {
 }
 
 func attributeAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
-
 	attrName, ok := act["name"].(string)
 	if !ok {
 		return ra.err("could not find name to retrieve attribute")
@@ -249,17 +248,17 @@ func attributeAction(ra runtimeAction, act Action) interface{} {
 }
 
 func htmlAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	return element.HTML()
 }
 
 func textAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	return element.Text()
 }
@@ -378,36 +377,35 @@ func textNotEqualAction(ra runtimeAction, act Action) interface{} {
 }
 
 func visibleAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
-
 	return element.Visible()
 }
 
 func blurAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.Blur()
 	return nil
 }
 
 func clearAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.SelectAllText().Input("")
 	return nil
 }
 
 func clickAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.Click()
 	return nil
@@ -434,18 +432,18 @@ func evalAction(ra runtimeAction, act Action) interface{} {
 		return nil
 	}
 
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.Eval(expression)
 	return nil
 }
 
 func focusAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.Focus()
 	return nil
@@ -530,18 +528,18 @@ func pressAction(ra runtimeAction, act Action) interface{} {
 }
 
 func scrollIntoViewAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.ScrollIntoView()
 	return nil
 }
 
 func selectAllAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.SelectAllText()
 	return nil
@@ -588,9 +586,9 @@ func waitIdleAction(ra runtimeAction, _ Action) interface{} {
 }
 
 func waitInvisibleAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.WaitInvisible()
 	return nil
@@ -602,18 +600,18 @@ func waitLoadAction(ra runtimeAction, _ Action) interface{} {
 }
 
 func waitStableAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.WaitStable()
 	return nil
 }
 
 func waitVisibleAction(ra runtimeAction, act Action) interface{} {
-	element, e := ra.createElem(act)
-	if e != nil {
-		return *e
+	element, err := ra.createElem(act)
+	if err != nil {
+		return *err
 	}
 	element.WaitVisible()
 	return nil
@@ -634,12 +632,12 @@ func (ra runtimeAction) createElem(act Action) (*rod.Element, *RuntimeError) {
 
 	attrElement := act["element"]
 	var element *rod.Element
-	switch attrElement.(type) {
+	switch typed := attrElement.(type) {
 	case string:
-		strElement := attrElement.(string)
+		strElement := typed
 		element = run.P.ElementX(run.sel(strElement))
 	case *rod.Element:
-		element = attrElement.(*rod.Element)
+		element = typed
 	default:
 		e := ra.err("could not find element key to retrieve")
 		return nil, &e
