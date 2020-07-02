@@ -494,7 +494,20 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		return nil
 
 	case "waitIdle":
-		parent.P.WaitRequestIdle()
+		done := make(chan bool)
+		ctx := parent.P.GetContext()
+
+		go func() {
+			parent.P.WaitRequestIdle()()
+			done <- true
+		}()
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-done:
+			return nil
+		}
 
 	case "waitInvisible":
 		element, e := parent.createElem(act, err)
