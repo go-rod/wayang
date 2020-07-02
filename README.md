@@ -8,6 +8,7 @@ Table of Contents
 * [Wayang](#wayang)
 * [Table of Contents](#table-of-contents)
 * [Overview](#overview)
+    * [What is Wayang used for?](#what-is-wayang-used-for)
 * [Running a program](#running-a-program)
 * [Examples](#examples)
     * [Navigate to a website](#navigate-to-a-website)
@@ -60,8 +61,6 @@ Table of Contents
     * [waitVisible](#waitvisible)
 * [Todo:](#todo)
 
-
-
 # Overview
 
 Rod is a High-level Devtools driver directly based on [DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/).
@@ -71,15 +70,21 @@ so that whenever a function is missing users can easily send control requests to
 Wayang is a controller of Rod, making it possible to write programs with Rod in a more language neutral way.
 While it does not cover all of Rod's API at the moment, we plan to make it feature complete.
 
+### What is Wayang used for?
+
+Wayang was created for primarily integration testing. 
+It allows QA engineers to write web automation tests more easily.
+We also plan to add more features to make it easier for web automation developers to use this library. 
+
 # Running a program  
 
-1. Build the CLI version for wayang. You can use the make file provided in the [CLI](./cli) folder. 
+1. Build the CLI version for Wayang. You can use the make file provided in the [CLI](./cli) folder. 
  
 2. There is currently no support for reading programs from STDIN. This is a feature that is planned to be added soon.
 Instead, to link a script to run, you must provide the location of a JSON file. e.g. `--file="example.json"`
 
 3. Provide other optional arguments. 
-`--headless=[true|false]` will allow you to specify whether or not to run wayang in headless mode. 
+`--headless=[true|false]` will allow you to specify whether or not to run Wayang in headless mode. 
 With headless mode enabled, Chrome runs in the background and is not rendered. 
 `--outputFile` can also be used to write the program output to a file. 
 
@@ -195,10 +200,10 @@ If you want to do more complex things, you can also use more complex xpath queri
 
 # The Action JSON Object
 
-Actions are the bread and butter of wayang. 
-They are what allow you to use wayang for web scraping, testing, and automation.
+Actions are the bread and butter of Wayang. 
+They are what allow you to use Wayang for web scraping, testing, and automation.
 
-Actions are all required to have a key:value pair called `action`. This tells wayang what it should do.
+Actions are all required to have a key:value pair called `action`. This tells Wayang what it should do.
 A few examples of actions are:
 - navigate
 - click
@@ -221,8 +226,8 @@ based on the element key:value pair. This can be used in conjunction with the `i
 This is most useful when writing tests for a website, where you can log information and behaviour using `if` statements.
 
 When working with actions, it is important to know what values are used to complete the action.
-When working with the `navigate` action, wayang needs to know what is the location of the link you want to navigate to. 
-It is *required* to provide a `link` key so that wayang can navigate you to the page you want to go to.   
+When working with the `navigate` action, Wayang needs to know what is the location of the link you want to navigate to. 
+It is *required* to provide a `link` key so that Wayang can navigate you to the page you want to go to.   
 ```json
 {
   "action": "navigate",
@@ -230,7 +235,7 @@ It is *required* to provide a `link` key so that wayang can navigate you to the 
 }
 ```
 
-The action blurb above shows how we first tell wayang that we want to perform the `navigate` action, 
+The action blurb above shows how we first tell Wayang that we want to perform the `navigate` action, 
 and then provide it information about where to navigate to.
 
 Here is another example showing how the more complicated action `if` works.
@@ -316,7 +321,7 @@ They are only run when they are called on in the steps tag, or when another acti
 Currently, there is no feature to provide parameters/arguments to actions. 
 
 If you have a suggestion on how we can implement this while maintaining the simplicity of this language, 
-feel free to create a new issue with your proposed solution. We are always looking on ways to improve wayang.  
+feel free to create a new issue with your proposed solution. We are always looking on ways to improve Wayang.  
 
 #### Steps
 
@@ -487,3 +492,7 @@ and `true` for the `success` key.
 - Support querying the store
 - Support `trace` mode
 - Add a settings block for configuring rod
+- Support `<option>` tags, (*Element.Select())
+- Support iFrame
+- Support Shadow DOM
+- Support File Upload inputs 
