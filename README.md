@@ -1,12 +1,13 @@
-# Overview
+# Wayang
 
 ![](https://img.shields.io/github/v/tag/go-rod/wayang?sort=semver)
 
 Table of Contents
 =================
 
-* [Overview](#overview)
+* [Wayang](#wayang)
 * [Table of Contents](#table-of-contents)
+* [Overview](#overview)
 * [Running a program](#running-a-program)
 * [Examples](#examples)
     * [Navigate to a website](#navigate-to-a-website)
@@ -18,8 +19,50 @@ Table of Contents
 * [Program Structure](#program-structure)
     * [Selectors](#selectors)
     * [Actions](#actions)
-    * [Steps](#steps)
+      * [Steps](#steps)
+* [Documentation](#documentation)
+  * [Special Actions](#special-actions)
+    * [do](#do)
+    * [forEach](#foreach)
+    * [if](#if)
+    * [store](#store)
+  * [Text Result Actions](#text-result-actions)
+    * [attribute](#attribute)
+    * [html](#html)
+    * [text](#text)
+  * [Boolean Result Actions](#boolean-result-actions)
+    * [has](#has)
+    * [not](#not)
+    * [textContains](#textcontains)
+    * [textEqual](#textequal)
+    * [textNotEqual](#textnotequal)
+    * [visible](#visible)
+  * [Generic Actions](#generic-actions)
+    * [blur](#blur)
+    * [clear](#clear)
+    * [click](#click)
+    * [error](#error)
+    * [eval](#eval)
+    * [focus](#focus)
+    * [input](#input)
+    * [log](#log)
+    * [logStore](#logstore)
+    * [navigate](#navigate)
+    * [press](#press)
+    * [scrollIntoView](#scrollintoview)
+    * [selectAll](#selectall)
+  * [Sleep/Wait Actions](#sleepwait-actions)
+    * [sleep](#sleep)
+    * [waitIdle](#waitidle)
+    * [waitInvisible](#waitinvisible)
+    * [waitLoad](#waitload)
+    * [waitStable](#waitstable)
+    * [waitVisible](#waitvisible)
+* [Todo:](#todo)
 
+
+
+# Overview
 
 Rod is a High-level Devtools driver directly based on [DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/).
 It's designed for web automation and scraping. Rod also tries to expose low-level interfaces to users, 
@@ -150,7 +193,6 @@ If you want to do more complex things, you can also use more complex xpath queri
 }
 ```
 
-
 # The Action JSON Object
 
 Actions are the bread and butter of wayang. 
@@ -276,9 +318,172 @@ Currently, there is no feature to provide parameters/arguments to actions.
 If you have a suggestion on how we can implement this while maintaining the simplicity of this language, 
 feel free to create a new issue with your proposed solution. We are always looking on ways to improve wayang.  
 
-### Steps
+#### Steps
 
 Coming to the final part of the program structure, we have the steps. 
 The steps are an **array** of actions, that are ran in order of declaration in the program.
 In the example above, the action with the name `action type` (which doesn't exist, and is only being used as an example)
 is first executed. The other key value pairs in the body will be used as arguments when that action is executed.
+
+# Documentation
+
+## Special Actions
+
+### do
+
+Execute multiple actions in place of a single action. 
+This can be useful when used in custom actions to execute multiple statements, and `if` actions.
+
+**Parameters**:
+- `statements` The list of actions that will be executed in order of declaration.
+    - Required: Yes
+    - Type: Array(Action)
+
+**Returns**: The result of the last statement. 
+
+```json
+{
+  "action": "do",
+  "statements": [
+    {
+      "action": "a"
+    },
+    {
+      "action": "b"
+    }
+  ]
+}
+```
+
+Action `a` will be ran first (as it is declared first), and then action `b` will be ran.
+The result of action `b` will be the result of the `do` statement.
+
+### forEach
+
+WIP
+
+### if
+
+Execute an action conditionally.
+This can be useful when writing tests to check for the presence of elements, or if they are visible.
+
+**Parameters**:
+- `condition`: An action, whose result will determine whether `statement` or `otherwise` is ran.
+    - Required: Yes
+    - Type: Action &rarr; Boolean
+- `statement`: The action ran when `condition` is true.
+    - Required: Yes
+    - Type: Action
+- `otherwise`: The action ran when `condition` is false.
+    - Required: No
+    - Type: Action 
+
+**Returns**: The result of the action of `statement` or `otherwise` (Based on if `condition` is true or not). 
+If the condition is false and `otherwise` is not provided, it will return `nil`.  
+
+```json
+{
+  "action": "if",
+  "condition": {
+    "action": "has",
+    "element": "//div[@id='error']"
+  },
+  "execute": {
+    "action": "error",
+    "message": "expected error node to not be present"
+  },
+  "otherwise": {
+    "action": "log",
+    "message": "program successfully completed"
+  }
+}
+```
+
+Wayang will check if `//div[@id='error]` is present on the website. If it is present, 
+the program will error with the message `expected error node to not be present`. 
+Otherwise it will log `program successfully completed`, and continue/exit. 
+
+### store
+
+**Parameters**:
+- `items`: A map of key-value pairs where the values will be added to the store. 
+The values in the map do not have to be actions, and can also link to custom actions or statements.
+    - Type: map[string] &rarr; Anything
+    - Required: No. (Why are you executing this action then?)
+    
+**Returns**: `nil`
+
+Store information into the program environment.
+
+*NOTE*: This is not used as a place to retrieve and query information later yet. 
+At the moment, this is only used as a way to get output information after running a program.
+We are planning to add support to allow the querying of the store in places such as if statements. 
+
+*NOTE*: Using store will allow you to overwrite previously stored items in the program.
+
+```json
+{
+  "action": "store",
+  "items": {
+    "responseCode": {
+      "action": "text",
+      "element": "$responseCode"
+    },
+    "success": true
+  }
+}
+```
+
+Here we store two items into our program for output; the text of the `$responseCode` element, 
+and `true` for the `success` key. 
+
+## Text Result Actions
+
+### attribute
+### html
+### text
+
+## Boolean Result Actions
+
+### has
+### not
+### textContains
+### textEqual
+### textNotEqual
+### visible
+
+## Generic Actions
+
+### blur
+### clear
+### click
+### error
+### eval
+### focus
+### input
+### log
+### logStore
+### navigate
+### press
+### scrollIntoView
+### selectAll
+
+## Sleep/Wait Actions
+
+### sleep
+### waitIdle
+### waitInvisible
+### waitLoad
+### waitStable
+### waitVisible
+
+# Todo:
+
+- Allow actions to be substituted anywhere for its return value.
+- Support CSS Selectors
+- Support Trimming text for selectors
+- Allow timeout for wait actions
+- Implement `foreach`
+- Support querying the store
+- Support `trace` mode
+- Add a settings block for configuring rod
