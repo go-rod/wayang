@@ -118,6 +118,55 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		}
 		return parent.runAction(*action, source)
 
+	case "store":
+		items, ok := act["items"].(map[string]interface{})
+		if !ok {
+			items = make(map[string]interface{})
+		}
+
+		for s, field := range items {
+			switch field.(type) {
+			case map[string]interface{}:
+				source = fmt.Sprintf("%s.field[%s]", source, s)
+				res := parent.runAction(field.(map[string]interface{}), source)
+				if err, ok := res.(RuntimeError); ok {
+					return err
+				}
+				parent.ENV[s] = res
+			case Action:
+				source = fmt.Sprintf("%s.field[%s]", source, s)
+				res := parent.runAction(field.(Action), source)
+				if err, ok := res.(RuntimeError); ok {
+					return err
+				}
+				parent.ENV[s] = res
+			case string:
+				if !strings.HasPrefix(field.(string), "$") {
+					parent.ENV[s] = field
+					break
+				}
+
+				value := strings.TrimPrefix(field.(string), "$")
+				if selector, ok := parent.program.Selectors[value]; ok {
+					parent.ENV[s] = selector
+					break
+				}
+
+				if action, ok := parent.program.Actions[value]; ok {
+					res := parent.runAction(action, source)
+					if err, ok := res.(RuntimeError); ok {
+						return err
+					}
+					parent.ENV[s] = res
+					break
+				}
+				parent.ENV[s] = field
+			default:
+				parent.ENV[s] = field
+			}
+		}
+		return nil
+
 	case "attribute":
 		element, e := parent.createElem(act, err)
 		if e != nil {
@@ -173,6 +222,38 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		}
 		return !toBool
 
+	case "textContains":
+		text, ok := act["text"].(string)
+		if !ok {
+			return err("a 'text' key (type string) is required to present")
+		}
+
+		stmt := parent.makeAction(act["statement"])
+		if stmt == nil {
+			return err("a statement key (type action) is required to be present")
+		}
+
+		substrRes := parent.runAction(*stmt, source)
+		switch substrRes.(type) {
+		case RuntimeError:
+			return substrRes
+		case string:
+			break
+		default:
+			return err("unexpected result from action: ", substrRes)
+		}
+		substr := substrRes.(string)
+
+		ignoreCase, ok := act["ignoreCase"].(bool)
+		if !ok {
+			ignoreCase = false
+		}
+		if ignoreCase {
+			substr = strings.ToLower(substr)
+			text = strings.ToLower(text)
+		}
+		return strings.Contains(text, substr)
+
 	case "textEqual":
 		expected, ok := act["expected"].(string)
 		if !ok {
@@ -192,8 +273,18 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		default:
 			return err("unexpected result from action: ", actualRes)
 		}
+		actual := actualRes.(string)
 
-		return expected == actualRes
+		ignoreCase, ok := act["ignoreCase"].(bool)
+		if !ok {
+			ignoreCase = false
+		}
+		if ignoreCase {
+			expected = strings.ToLower(expected)
+			actual = strings.ToLower(actual)
+		}
+
+		return expected == actual
 
 	case "textNotEqual":
 		expected, ok := act["expected"].(string)
@@ -214,8 +305,18 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		default:
 			return err("unexpected result from action: ", actualRes)
 		}
+		actual := actualRes.(string)
 
-		return expected != actualRes
+		ignoreCase, ok := act["ignoreCase"].(bool)
+		if !ok {
+			ignoreCase = false
+		}
+		if ignoreCase {
+			expected = strings.ToLower(expected)
+			actual = strings.ToLower(actual)
+		}
+
+		return expected != actual
 
 	case "visible":
 		element, e := parent.createElem(act, err)
@@ -381,63 +482,14 @@ func (parent *Runner) runAction(act Action, source string) interface{} {
 		}
 
 		ctx := parent.P.GetContext()
-		second := float64(time.Second)
-		t := time.NewTimer(time.Duration(duration * second))
+		asDuration := time.Duration(duration)
+		t := time.NewTimer(asDuration * time.Second)
 
 		select {
 		case <-ctx.Done():
 			t.Stop()
 			return ctx.Err()
 		case <-t.C:
-		}
-		return nil
-
-	case "store":
-		items, ok := act["items"].(map[string]interface{})
-		if !ok {
-			items = make(map[string]interface{})
-		}
-
-		for s, field := range items {
-			switch field.(type) {
-			case map[string]interface{}:
-				source = fmt.Sprintf("%s.field[%s]", source, s)
-				res := parent.runAction(field.(map[string]interface{}), source)
-				if err, ok := res.(RuntimeError); ok {
-					return err
-				}
-				parent.ENV[s] = res
-			case Action:
-				source = fmt.Sprintf("%s.field[%s]", source, s)
-				res := parent.runAction(field.(Action), source)
-				if err, ok := res.(RuntimeError); ok {
-					return err
-				}
-				parent.ENV[s] = res
-			case string:
-				if !strings.HasPrefix(field.(string), "$") {
-					parent.ENV[s] = field
-					break
-				}
-
-				value := strings.TrimPrefix(field.(string), "$")
-				if selector, ok := parent.program.Selectors[value]; ok {
-					parent.ENV[s] = selector
-					break
-				}
-
-				if action, ok := parent.program.Actions[value]; ok {
-					res := parent.runAction(action, source)
-					if err, ok := res.(RuntimeError); ok {
-						return err
-					}
-					parent.ENV[s] = res
-					break
-				}
-				parent.ENV[s] = field
-			default:
-				parent.ENV[s] = field
-			}
 		}
 		return nil
 
