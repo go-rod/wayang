@@ -59,7 +59,7 @@ Table of Contents
     * [waitLoad](#waitload)
     * [waitStable](#waitstable)
     * [waitVisible](#waitvisible)
-* [Todo:](#todo)
+* [Todo](#todo)
 
 # Overview
 
@@ -482,7 +482,7 @@ and `true` for the `success` key.
 ### waitStable
 ### waitVisible
 
-# Todo:
+# Todo
 
 - Allow actions to be substituted anywhere for its return value.
 - Support CSS Selectors
@@ -491,7 +491,7 @@ and `true` for the `success` key.
 - Implement `foreach`
 - Support querying the store
 - Support `trace` mode
-- Add a settings block for configuring rod
+- Add a `settings` block for configuring rod
 - Support `<option>` tags, (*Element.Select())
 - Support iFrame
 - Support Shadow DOM
