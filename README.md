@@ -63,8 +63,6 @@ Table of Contents
     * [waitLoad](#waitload)
     * [waitStable](#waitstable)
     * [waitVisible](#waitvisible)
-* [Todo](#todo)
-
 
 # Overview
 
@@ -986,20 +984,3 @@ All the sleep/wait actions defined below will always return nil, unless explicit
 ### waitLoad
 ### waitStable
 ### waitVisible
-
-# Todo
-
-- Finish the docs ^^
-- Allow actions to be substituted anywhere for its return value.
-- Support CSS Selectors
-- Support Trimming text for selectors
-- Allow timeout for all actions
-- Implement `foreach`
-- Support querying the store
-- Support `trace` mode
-- Add a `settings` block for configuring rod
-- Support `<option>` tags, (*Element.Select())
-- Support iFrames
-- Support Shadow DOM
-- Support File Upload inputs 
-- Write more tests
