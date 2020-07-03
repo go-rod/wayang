@@ -78,7 +78,7 @@ We also plan to add more features to make it easier for web automation developer
 
 # Running a program  
 
-1. Build the CLI version for Wayang. You can use the make file provided in the [CLI](./cli) folder. 
+1. Build the CLI version for Wayang. You can use the make file provided in the [CLI](cli) folder. 
  
 2. There is currently no support for reading programs from STDIN. This is a feature that is planned to be added soon.
 Instead, to link a script to run, you must provide the location of a JSON file. e.g. `--file="example.json"`
@@ -308,7 +308,7 @@ This can be really handy when you want to refactor selectors in future code with
 
 Selectors is a map of key-pair values which are queried through the use of the dollar symbol. 
 In the example above, we define a selector with the name `selector_name`. 
-When executing an action, you can refer to the selector by that name by using the the string `$selector_name`.
+When executing an action, you can refer to the selector by that name by using the string `$selector_name`.
 
 ### Actions
 
@@ -332,6 +332,59 @@ In the example above, the action with the name `action type` (which doesn't exis
 is first executed. The other key value pairs in the body will be used as arguments when that action is executed.
 
 # Documentation
+
+## Selector elements
+
+Currently, selector elements can either be an xpath string, or a reference to a defined selector in the 
+`selectors` block. If the selector starts with a `$`, Wayang will parse it as a custom selector query.
+
+#### PROPOSED CHANGES
+We plan to add support for CSS Selectors soon. Here is our proposal to how we are planning to support them
+in a backwards-compatible matter.
+
+* If the value of a selector is type string
+    * If it starts with a `$` symbol, parse it as a selector query, and use the result of its value.
+    * Otherwise, parse it as an xpath query
+* If the value of a selector is a block
+    * Look for the two (required) sub-parameters:
+        * `by`
+            * If the `by` parameter is `xpath`, `x`, or `xp`, parse the selector as a xpath query
+            * If the `by` parameter is `css` or `c`, parse the selector as a CSS Selector query.
+        * `value`
+            * The value of the selector that will be queried. Placeholders here are NOT allowed.
+
+**Note**:
+
+When defining global usage selectors, the above proposed changes will also be applied.
+
+```json
+[
+  {
+    "element": "this will be an xpath statement"
+  },
+  {
+    "element": "$this will query the global selectors"
+  },
+  {
+    "element": {
+      "by": "xpath",
+      "value": "this will be an xpath statement"
+    }
+  },
+  {
+    "element": {
+      "by": "css",
+      "value": "this will be a css query"
+    }
+  },
+  {
+    "element": {
+      "by": "css",
+      "value": "$this is not going to query global selectors"
+    }
+  }
+]
+```
 
 ## Special Actions
 
@@ -407,7 +460,7 @@ If the condition is false and `otherwise` is not provided, it will return `nil`.
 
 Wayang will check if `//div[@id='error]` is present on the website. If it is present, 
 the program will error with the message `expected error node to not be present`. 
-Otherwise it will log `program successfully completed`, and continue/exit. 
+Otherwise, it will log `program successfully completed`, and continue/exit. 
 
 ### store
 
@@ -526,7 +579,7 @@ This also returns true if the element is not visible. To check if an element is 
     - Type: selector
     - Required: Yes
     
-**Returns**: A boolean value depending on if the element is found on the page.
+**Returns**: A boolean value depending on the presence of the element on the page.
 
 ```json
 {
@@ -657,7 +710,7 @@ function visible() {
     - Type: Action &rarr; string
     - Required: Yes
 
-**Returns**: whether or not the provided element is visible on the page.
+**Returns**: whether provided element is visible on the page.
 
 ```json
 {
@@ -668,21 +721,259 @@ function visible() {
 
 ## Generic Actions
 
+#### Note
+
+All the general actions defined below will always return nil, unless explicitly specified otherwise. 
+
 ### blur
+
+Unfocus the element selector provided. This will also call the `onblur` functions defined for any element.
+
+**Parameters**:
+- `element`: The element to blur
+    - Type: selector
+    - Required: Yes        
+
+```json
+{
+  "action": "blur",
+  "element": "//input[@type='text']"
+}
+```
+
 ### clear
+
+Clear will empty the text of an `input` or a `textarea`.
+This can also be achieved using a `selectAll` action with a `input` with empty text.
+
+**Parameters**:
+- `element`: The element to clear the text from
+    - Type: selector
+    - Required: Yes
+
+```json
+{
+  "action": "clear",
+  "element": "//input[@type='text']"
+}
+```
+
 ### click
+
+Click an element. This will also call the `click` event for most elements.
+
+**Parameters**:
+- `element`: The element to click
+    - Type: selector
+    - Required: Yes
+
+```json
+{
+  "action": "click",
+  "element": "//input@[type='submit']"
+}
+```
+
 ### error
+
+Exit the program in an error state. This will also print the error message provided. 
+The program will not execute any other actions after an error action executes.
+
+**Parameters**:
+- `message`: The reason or cause for the error
+    - Type: string
+    - Required: Yes
+
+```json
+{
+  "action": "error",
+  "message": "The website does not have a 'success' element."
+}
+```
+
 ### eval
+
+Execute javascript code on the page. The javascript can also be executed in the context of another element. 
+
+**Parameters**:
+- `expression`": The code that will be executed. You must provide a function to be executed.
+    - Type: string
+    - Required: Yes
+- `element`: A possible element to use for the context of the function. The element can be accessed with `this`.
+    - Type: selector
+    - Required: No
+
+**Returns**: The raw value of the result of the expression. For string results, it wil also return the quotes. 
+
+```json
+[
+  {
+    "action": "eval",
+    "expression": "() => console.log('hello!')"
+  },
+  {
+    "action": "eval",
+    "element": "//input[@type='submit']",
+    "expression": "() => this.submit()"
+  }
+]
+```
+
 ### focus
+
+Focus an element. This will also call the `focus` event for the element.
+
+**Parameters**:
+- `element`: The element to focus
+    - Type: selector
+    - Required: Yes
+
+```json
+{
+  "action": "focus",
+  "element": "//input[@id='username']"
+}
+```
+
 ### input
+
+Insert text into an input element. If an element isn't provided, 
+it will instead press the keys into the page as you would with a keyboard.
+
+**Parameters**:
+- `element`: A possible element to input text into.
+    - Type: selector
+    - Required: No 
+- `text`": The text that will be inputted into an element, or pressed.
+    - Type: string
+    - Required: Yes
+    
+```json
+[
+  {
+    "action": "input",
+    "element": "//input[@type='text']",
+    "text": "Hello "
+  },
+  {
+    "action": "input",
+    "text": "World!"
+  }
+]
+```
+
+The second input action will still input the text into the `//input[@type='text']` element, as it is still focused.
+
 ### log
+
+Print text to the console/logger output. 
+
+**Parameters**:
+- `message`: The message to output.
+    - Type: string
+    - Required: Yes
+
+```json
+{
+  "action": "log",
+  "message": "Successfully completed action!"
+}
+```
+
 ### logStore
+
+Log an action to the console/logger from the program store.
+
+**Parameters**:
+- `key`: The key of the value to output from the store, prefixed with a $. 
+    - Type: string
+    - Required: Yes
+
+```json
+{
+  "action": "logStore",
+  "key": "$responseCode"
+}
+```
+
 ### navigate
+
+Change the URL and load a new website. The request will block until the initial page response is complete. 
+Not until everything loads.
+
+**Parameters**:
+- `link`: The website to connect to.
+    - Type: string
+    - Required: Yes
+ 
+```json
+{
+  "action": "navigate",
+  "link": "https://google.com"
+  
+}
+```
+
 ### press
+
+The `press` action will input any key into the element provided, or into the page (refer to the `input` action).
+The press action gives you more control to specific keys, such as the `enter` key.
+
+[Full list of supported keys](https://gist.github.com/Hamzantal/e4f465712caf0a444433db387b2f60a6)
+
+**Parameters**:
+- `element`: A possible element to input text into.
+    - Type: selector
+    - Required: No 
+- `key`": The character/rune that will be inputted into an element, or pressed.
+    - Type:
+        - string (Refer to the gist above)
+        - rune (e.g '\u0102')
+    - Required: Yes
+
 ### scrollIntoView
+
+Scroll the element into view, if it is not currently in the viewport.
+
+**Parameters**:
+- `element`: The element to scroll into view.
+    - Type: selector
+    - Required: Yes 
+
+```json
+{
+  "action": "scrollIntoView",
+  "element": "//div[contains(@class, 'footer')]"
+}
+```
+
 ### selectAll
 
+Call the `select` method on a HTML element. On input elements, it selects the value. 
+
+```js
+function selectAllText () {
+  this.select()
+}
+```
+
+**Parameters**:
+- `element`: The element to select all the text of.
+    - Type: selector
+    - Required: Yes 
+
+```json
+{
+  "action": "selectAll",
+  "element": "//input[@type='text']"
+}
+```
+
 ## Sleep/Wait Actions
+
+#### Note
+
+All the sleep/wait actions defined below will always return nil, unless explicitly specified otherwise. 
 
 ### sleep
 ### waitIdle
@@ -703,6 +994,7 @@ function visible() {
 - Support `trace` mode
 - Add a `settings` block for configuring rod
 - Support `<option>` tags, (*Element.Select())
-- Support iFrame
+- Support iFrames
 - Support Shadow DOM
 - Support File Upload inputs 
+- Write more tests
