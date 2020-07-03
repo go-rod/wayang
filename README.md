@@ -22,6 +22,8 @@ Table of Contents
     * [Actions](#actions)
       * [Steps](#steps)
 * [Documentation](#documentation)
+  * [Selector elements](#selector-elements)
+      * [PROPOSED CHANGES](#proposed-changes)
   * [Special Actions](#special-actions)
     * [do](#do)
     * [forEach](#foreach)
@@ -39,6 +41,7 @@ Table of Contents
     * [textNotEqual](#textnotequal)
     * [visible](#visible)
   * [Generic Actions](#generic-actions)
+      * [Note](#note)
     * [blur](#blur)
     * [clear](#clear)
     * [click](#click)
@@ -53,6 +56,7 @@ Table of Contents
     * [scrollIntoView](#scrollintoview)
     * [selectAll](#selectall)
   * [Sleep/Wait Actions](#sleepwait-actions)
+      * [Note](#note-1)
     * [sleep](#sleep)
     * [waitIdle](#waitidle)
     * [waitInvisible](#waitinvisible)
@@ -60,6 +64,7 @@ Table of Contents
     * [waitStable](#waitstable)
     * [waitVisible](#waitvisible)
 * [Todo](#todo)
+
 
 # Overview
 
