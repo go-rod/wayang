@@ -238,7 +238,7 @@ func (s *S) TestEval() {
 		"expression", `() => window.location.href = "http://example.com/"`,
 	))
 	s.page.WaitLoad()
-	s.Nil(res)
+	s.Equal(`"http://example.com/"`, res)
 	s.Equal("http://example.com/", s.pageURL())
 }
 
