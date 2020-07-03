@@ -979,8 +979,124 @@ function selectAllText () {
 All the sleep/wait actions defined below will always return nil, unless explicitly specified otherwise. 
 
 ### sleep
+
+Pause any execution for a duration of seconds. Decimals can be used.
+
+**Parameters**:
+- `duration`: The time to pause execution for, in seconds. 
+    - Type: float64
+    - Required: Yes
+
+```json
+{
+  "action": "sleep",
+  "duration": 2.40
+}
+```
+
 ### waitIdle
+
+Waits until the browser doesn't send any requests to any location for 300 ms.
+
+**Parameters**:
+- `duration`: The maximum time to wait, after which the program will error.
+    - Type: float64
+    - Required: No
+    
+```json
+{
+  "action": "waitIdle",
+  "duration": 10
+}
+```
+
+The example above will wait upto 10 seconds for requests on the page to become idle, otherwise exit with an error.
+
 ### waitInvisible
+
+Waits until the selected element is no longer visible, or is removed from the DOM.
+
+**Parameters**:
+- `element`: The element to wait for to become invisible.
+    - Type: selector
+    - Required: Yes
+- `duration`: The maximum tme to wait, after which the program will error.
+    - Type: float64
+    - Required: No
+
+```json
+{
+  "action": "waitInvisible",
+  "element": "$loading"
+}
+```
+
 ### waitLoad
+
+Waits until the document calls the onLoad function.
+
+**Parameters**:
+- `duration`: The maximum tme to wait, after which the program will error.
+    - Type: float64
+    - Required: No
+    
+```json
+{
+  "action": "waitLoad",
+  "duration": 15
+}
+```
+
+This will wait up to 15 seconds for the waitLoad function to be called, otherwise return.
+
 ### waitStable
+
+Waits until the size and position are stable. Useful when waiting for the animation of modal
+or button to complete so that you can simulate the mouse to move to it and click on it after it becomes stable.
+
+**Parameters**:
+- `element`: The element to wait for to become stable.
+    - Type: selector
+    - Required: Yes
+- `duration`: The maximum tme to wait, after which the program will error.
+    - Type: float64
+    - Required: No
+
+```json
+{
+  "action": "waitLoad",
+  "element": "$successBtn",
+  "duration": 3
+}
+```
+
+
 ### waitVisible
+
+Waits until the specified element is visible.  
+
+```js
+function visible() {
+  const box = this.getBoundingClientRect()
+  const style = window.getComputedStyle(this)
+  return style.display !== 'none' &&
+    style.visibility !== 'hidden' &&
+    !!(box.top || box.bottom || box.width || box.height)
+}
+```
+
+**Parameters**:
+- `element`: The element to wait for to become visible.
+    - Type: selector
+    - Required: Yes
+- `duration`: The maximum tme to wait, after which the program will error.
+    - Type: float64
+    - Required: No
+
+```json
+{
+  "action": "waitVisible",
+  "element": "$successBtn",
+  "duration": 5
+}
+```
