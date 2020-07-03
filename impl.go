@@ -565,34 +565,21 @@ func sleepAction(ra runtimeAction, act Action) interface{} {
 	}
 
 	ctx := ra.runner.P.GetContext()
-	asDuration := time.Duration(duration)
-	t := time.NewTimer(asDuration * time.Second)
+	asFloat := float64(time.Second) * duration
+	t := time.After(time.Duration(asFloat))
 
 	select {
 	case <-ctx.Done():
-		t.Stop()
 		return ctx.Err()
-	case <-t.C:
+	case <-t:
+		return nil
 	}
-	return nil
 }
 
 func waitIdleAction(ra runtimeAction, _ Action) interface{} {
-	run := ra.runner
-	done := make(chan bool)
-	ctx := run.P.GetContext()
-
-	go func() {
-		run.P.WaitRequestIdle()()
-		done <- true
-	}()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-done:
-		return nil
-	}
+	return ra.waitWithTimeout(func() {
+		ra.runner.P.WaitRequestIdle()()
+	}, "waited too long for waitInvisible action to complete")
 }
 
 func waitInvisibleAction(ra runtimeAction, act Action) interface{} {
@@ -600,13 +587,16 @@ func waitInvisibleAction(ra runtimeAction, act Action) interface{} {
 	if err != nil {
 		return *err
 	}
-	element.WaitInvisible()
-	return nil
+
+	return ra.waitWithTimeout(func() {
+		element.WaitInvisible()
+	}, "waited too long for waitInvisible action to complete")
 }
 
 func waitLoadAction(ra runtimeAction, _ Action) interface{} {
-	ra.runner.P.WaitLoad()
-	return nil
+	return ra.waitWithTimeout(func() {
+		ra.runner.P.WaitLoad()
+	}, "waited too long for waitLoad action to complete")
 }
 
 func waitStableAction(ra runtimeAction, act Action) interface{} {
@@ -614,8 +604,11 @@ func waitStableAction(ra runtimeAction, act Action) interface{} {
 	if err != nil {
 		return *err
 	}
-	element.WaitStable()
-	return nil
+
+	return ra.waitWithTimeout(func() {
+		element.WaitStable()
+	}, "waited too long for waitStable action to complete")
+
 }
 
 func waitVisibleAction(ra runtimeAction, act Action) interface{} {
@@ -623,8 +616,41 @@ func waitVisibleAction(ra runtimeAction, act Action) interface{} {
 	if err != nil {
 		return *err
 	}
-	element.WaitVisible()
-	return nil
+
+	return ra.waitWithTimeout(func() {
+		element.WaitVisible()
+	}, "waited too long for waitVisible action to complete")
+}
+
+func (ra runtimeAction) waitWithTimeout(wait func(), timeoutMsg string) interface{} {
+	run := ra.runner
+
+	ctx := run.P.GetContext()
+
+	done := make(chan bool, 1)
+	go func() {
+		wait()
+		done <- true
+	}()
+
+	timeout := make(chan bool, 1)
+	duration, ok := ra.act["duration"].(float64)
+	if ok {
+		go func() {
+			asFloat := float64(time.Second) * duration
+			time.Sleep(time.Duration(asFloat))
+			timeout <- true
+		}()
+	}
+
+	select {
+	case <-ctx.Done():
+		return ra.err("context error:", ctx.Err())
+	case <-timeout:
+		return ra.err(timeoutMsg)
+	case <-done:
+		return nil
+	}
 }
 
 func (ra runtimeAction) err(errs ...interface{}) RuntimeError {
