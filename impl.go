@@ -133,7 +133,12 @@ func forEachAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("could not convert elements to type string")
 	}
 
-	for _, element := range run.P.ElementsX(run.sel(elements)) {
+	sel, ok := run.sel(elements)
+	if !ok {
+		return ra.err("could not find a custom selector defined with the specified value")
+	}
+
+	for _, element := range run.P.ElementsX(sel) {
 		action["element"] = element // needs to be the xpath
 		if res, ok := run.runAction(action, ra.source).(RuntimeError); ok {
 			return res
@@ -271,7 +276,10 @@ func hasAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("could not find an element key of type string")
 	}
 
-	sel := run.sel(attrSel)
+	sel, ok := run.sel(attrSel)
+	if !ok {
+		return ra.err("could not find a custom selector defined with the specified value")
+	}
 	return run.P.HasX(sel)
 }
 
@@ -432,16 +440,14 @@ func evalAction(ra runtimeAction, act Action) interface{} {
 	}
 
 	if _, ok := act["element"]; !ok {
-		ra.runner.P.Eval(expression)
-		return nil
+		return ra.runner.P.Eval(expression).Raw
 	}
 
 	element, err := ra.createElem(act)
 	if err != nil {
 		return *err
 	}
-	element.Eval(expression)
-	return nil
+	return element.Eval(expression).Raw
 }
 
 func focusAction(ra runtimeAction, act Action) interface{} {
@@ -459,8 +465,8 @@ func inputAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("a 'text' key (type string) is required to be present")
 	}
 
-	element, e := ra.createElem(act)
-	if e != nil {
+	element, err := ra.createElem(act)
+	if err != nil {
 		ra.runner.P.Keyboard.InsertText(text)
 		return nil
 	}
@@ -484,13 +490,13 @@ func logStoreAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("a 'key' key (type string) is required to present")
 	}
 	if !strings.HasPrefix(keyStmt, "$") {
-		return ra.err("querying the store re")
+		return ra.err("querying the store requires a $ prefix")
 	}
 
 	key := strings.TrimPrefix(keyStmt, "$")
 	exists, ok := ra.runner.ENV[key]
 	if !ok {
-		return ra.err("the specified key is not in the program memory")
+		return ra.err("the specified key is not in the program store")
 	}
 	return exists
 }
@@ -522,8 +528,8 @@ func pressAction(ra runtimeAction, act Action) interface{} {
 		}
 	}
 
-	element, e := ra.createElem(act)
-	if e != nil {
+	element, err := ra.createElem(act)
+	if err != nil {
 		ra.runner.P.Keyboard.Press(press)
 		return nil
 	}
@@ -639,12 +645,18 @@ func (ra runtimeAction) createElem(act Action) (*rod.Element, *RuntimeError) {
 	switch typed := attrElement.(type) {
 	case string:
 		strElement := typed
-		element = run.P.ElementX(run.sel(strElement))
+		sel, ok := run.sel(strElement)
+		if !ok {
+			err := ra.err("could not find a custom selector defined with the specified value")
+			return nil, &err
+		}
+
+		element = run.P.ElementX(sel)
 	case *rod.Element:
 		element = typed
 	default:
-		e := ra.err("could not find element key to retrieve")
-		return nil, &e
+		err := ra.err("could not find element key to retrieve")
+		return nil, &err
 	}
 	return element, nil
 }
@@ -662,9 +674,10 @@ func (parent *Runner) makeAction(act interface{}) *Action {
 	}
 }
 
-func (parent *Runner) sel(element string) string {
+func (parent *Runner) sel(element string) (string, bool) {
 	if strings.HasPrefix(element, "$") {
-		return parent.program.Selectors[strings.TrimPrefix(element, "$")]
+		res, ok := parent.program.Selectors[strings.TrimPrefix(element, "$")]
+		return res, ok
 	}
-	return element
+	return element, true
 }
