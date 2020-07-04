@@ -631,7 +631,9 @@ func (ra runtimeAction) waitWithTimeout(wait func(), timeoutMsg string) interfac
 
 	done := make(chan bool, 1)
 	go func() {
-		wait()
+		kit.Try(func() {
+			wait()
+		})
 		done <- true
 	}()
 
