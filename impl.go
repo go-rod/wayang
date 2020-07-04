@@ -2,6 +2,7 @@ package wayang
 
 import (
 	"fmt"
+	"github.com/ysmood/kit"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -429,7 +430,7 @@ func errorAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("a 'message' key (type string) is required to present")
 	}
 
-	ra.runner.Logger.Printf(`level=error msg=%s`, message)
+	ra.runner.Error(message)
 	return ra.err(message)
 }
 
@@ -480,7 +481,7 @@ func logAction(ra runtimeAction, act Action) interface{} {
 		return ra.err("a 'message' key (type string) is required to present")
 	}
 
-	ra.runner.Logger.Printf(`level=info msg=%s`, message)
+	ra.runner.Info(message)
 	return nil
 }
 
@@ -498,7 +499,8 @@ func logStoreAction(ra runtimeAction, act Action) interface{} {
 	if !ok {
 		return ra.err("the specified key is not in the program store")
 	}
-	return exists
+	ra.runner.Info(kit.Sdump(exists))
+	return nil
 }
 
 func navigateAction(ra runtimeAction, act Action) interface{} {

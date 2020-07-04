@@ -81,6 +81,14 @@ func (parent *Runner) Close() {
 	parent.Canceller()
 }
 
+func (parent *Runner) Info(message interface{}) {
+	parent.Logger.Printf(`level=info msg=%v`, message)
+}
+
+func (parent *Runner) Error(message interface{}) {
+	parent.Logger.Printf(`level=error msg=%s`, message)
+}
+
 func (re *RuntimeError) Action() Action {
 	return re.action
 }
