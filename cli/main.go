@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-rod/rod/lib/cdp"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/ysmood/kit"
 
@@ -31,7 +32,7 @@ func main() {
 	}
 
 	url := launcher.New().Headless(*headless).Launch()
-	runner := wayang.NewRemoteRunner(url)
+	runner := wayang.NewRemoteRunner(cdp.New(url))
 	defer runner.Close()
 
 	var program wayang.Program

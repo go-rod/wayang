@@ -7,13 +7,15 @@ import (
 	"os"
 
 	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/cdp"
+	"github.com/go-rod/rod/lib/defaults"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/ysmood/kit"
 )
 
-func NewRemoteRunner(url string) *Runner {
+func NewRemoteRunner(client *cdp.Client) *Runner {
 	ctx, cancel := context.WithCancel(context.Background())
-	browser := rod.New().Context(ctx, cancel).ControlURL(url).Connect()
+	browser := rod.New().Context(ctx, cancel).Client(client).Connect()
 
 	page := browser.Page("")
 	logger := log.New(os.Stdout, "", log.LstdFlags)
@@ -29,8 +31,19 @@ func NewRemoteRunner(url string) *Runner {
 }
 
 func NewRunner() *Runner {
-	url := launcher.New().Launch()
-	return NewRemoteRunner(url)
+	u := defaults.URL
+	if defaults.Remote {
+		if u == "" {
+			u = "ws://127.0.0.1:9222"
+		}
+		return NewRemoteRunner(launcher.NewRemote(u).Client())
+	}
+	if u == "" {
+		var err error
+		u, err = launcher.New().LaunchE()
+		kit.E(err)
+	}
+	return NewRemoteRunner(cdp.New(u))
 }
 
 func (parent *Runner) RunProgram(program Program) (interface{}, *RuntimeError) {
